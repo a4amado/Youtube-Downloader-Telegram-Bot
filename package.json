@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "lunch:dev": "nodemon ./src/bot.ts"
+    "lunch:dev": "nodemon ./src/bot.ts",
+    "lunch:start": "forever start ./dist/bot.js",
+    "format": "prettier --write \"./src/**/**.ts\""
   },
   "keywords": [],
   "author": "",
@@ -12,10 +14,15 @@
   "devDependencies": {
     "@types/node": "^18.11.18",
     "nodemon": "^2.0.20",
+    "prettier": "^2.8.1",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.4"
   },
   "dependencies": {
-    "telegraf": "^4.11.2"
+    "dotenv": "^16.0.3",
+    "notenv": "^2.0.3",
+    "telegraf": "^4.11.2",
+    "telegram-keyboard": "^2.3.2",
+    "ytdl-core": "^4.11.2"
   }
 }
