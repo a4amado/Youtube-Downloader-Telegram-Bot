@@ -6,7 +6,8 @@
   "scripts": {
     "lunch:dev": "nodemon ./src/bot.ts",
     "lunch:start": "forever start ./dist/bot.js",
-    "format": "prettier --write \"./src/**/**.ts\""
+    "format": "prettier --write \"./src/**/**.ts\"",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
