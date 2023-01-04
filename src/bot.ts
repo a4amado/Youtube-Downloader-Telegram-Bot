@@ -6,7 +6,8 @@ if(!process.env.BOT_TOKEN ) {
   
   process.exit(1)
 } else {
-  console.error(process.env.BOT_TOKEN)
+  console.log(process.env.BOT_TOKEN[0])
+  console.log(process.env.BOT_TOKEN[1])
 }
 
 import { Telegraf } from "telegraf";
