@@ -1,16 +1,17 @@
 import env from "dotenv";
+import { fstat, writeFile, writeFileSync } from "fs";
 env.config();
-
 
 import { Telegraf } from "telegraf";
 import { Key, Keyboard } from "telegram-keyboard";
 
-import ytdl from "ytdl-core";
-import { getFormatsForStreamsWithAudiosAndVideo } from "./utils/yt-dlp";
+import ytdl, { videoFormat } from "ytdl-core";
+import app from "./firebase/init";
+import { getFormatsForStreamsWithAudiosAndVideo, parse } from "./utils/yt-dlp";
 
-console.log(`${process.env.BOT_TOKEN_ID}:${process.env.BOT_TOKEN_SECRET}`);
-
-const bot = new Telegraf(`${process.env.BOT_TOKEN_ID}:${process.env.BOT_TOKEN_SECRET}`);
+const bot = new Telegraf(
+  `${process.env.BOT_TOKEN_ID}:${process.env.BOT_TOKEN_SECRET}`
+);
 
 bot.settings((e) => {
   e.reply(
@@ -27,12 +28,20 @@ bot.hears(YTREGEXP, async (e) => {
   try {
     e.sendChatAction("typing");
 
-    //   const info = await ytdl.getBasicInfo(e.message.text);
+    const info = await ytdl.getBasicInfo(e.message.text);
+    const qualityDictionary = parse(info.formats);
+    const qulaity = await app
+      .firestore()
+      .collection("USERS")
+      .select("quality")
+      .where("id", "==", e.from.id)
+      .get();
 
     //   const list = getItagForStreamsWithAudiosAndVideo(info.formats);
 
     e.reply(
-      "\nThe Download Functionality is disabled\nThis Bot is for show only to see the code please visit:\nhttps://github.com/a4addel/Youtube-Downloader-Telegram-Bot\n"
+      JSON.stringify(qulaity.docs[0].data())
+      // "\nThe Download Functionality is disabled\nThis Bot is for show only to see the code please visit:\nhttps://github.com/a4addel/Youtube-Downloader-Telegram-Bot\n"
     );
   } catch (error) {}
 });
@@ -40,9 +49,9 @@ bot.hears(YTREGEXP, async (e) => {
 const not_YT_LINK = new RegExp(
   "^((?!(http[s]?://)?(?:www.)?youtu.be|youtube.com).)*$"
 );
-bot.hears(not_YT_LINK, (e) => {
-  e.reply("Please send Youtube link.");
-});
+// bot.hears(not_YT_LINK, (e) => {
+//   e.reply("Please send Youtube link.");
+// });
 
 bot.on("callback_query", (e) => {
   // @ts-ignore next-line
@@ -76,7 +85,21 @@ bot.on("callback_query", (e) => {
       break;
   }
 });
-bot.start((e) => {
+bot.start(async (e) => {
+  const isUserAlreadyRegisterd = await app
+    .firestore()
+    .collection("USERS")
+    .select("id,quality")
+    .where("id", "==", e.message.from.id)
+    .get();
+
+  if (isUserAlreadyRegisterd.docs[0]) return e.reply("Welcome back");
+  await app.firestore().collection("USERS").add({
+    id: e.message.from.id,
+    joind: new Date(),
+    quality: "720p",
+  });
+
   e.reply("Welcome");
   bot.telegram.setMyCommands([
     { command: "settings", description: "⚙️ Edit settings" },
