@@ -25,4 +25,4 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - run: pnpm lunch:start
+    - run: npm lunch:start
