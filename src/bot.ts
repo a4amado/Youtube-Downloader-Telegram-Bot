@@ -8,6 +8,8 @@ import { Key, Keyboard } from "telegram-keyboard";
 import ytdl from "ytdl-core";
 import { getFormatsForStreamsWithAudiosAndVideo } from "./utils/yt-dlp";
 
+console.log(`${process.env.BOT_TOKEN_ID}:${process.env.BOT_TOKEN_SECRET}`);
+
 const bot = new Telegraf(`${process.env.BOT_TOKEN_ID}:${process.env.BOT_TOKEN_SECRET}`);
 
 bot.settings((e) => {
