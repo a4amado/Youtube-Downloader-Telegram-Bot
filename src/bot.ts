@@ -1,14 +1,6 @@
 import env from "dotenv";
 env.config();
 
-if(!process.env.BOT_TOKEN ) {
-  console.error("No Bot Token")
-  
-  process.exit(1)
-} else {
-  console.log(process.env.BOT_TOKEN[0])
-  console.log(process.env.BOT_TOKEN[1])
-}
 
 import { Telegraf } from "telegraf";
 import { Key, Keyboard } from "telegram-keyboard";
@@ -16,7 +8,7 @@ import { Key, Keyboard } from "telegram-keyboard";
 import ytdl from "ytdl-core";
 import { getFormatsForStreamsWithAudiosAndVideo } from "./utils/yt-dlp";
 
-const bot = new Telegraf(process.env.BOT_TOKEN || "");
+const bot = new Telegraf(`${process.env.BOT_TOKEN_ID}:${process.env.BOT_TOKEN_SECRET}`);
 
 bot.settings((e) => {
   e.reply(
