@@ -1,6 +1,26 @@
+import { exec } from "child_process";
+import { randomUUID } from "crypto";
 import env from "dotenv";
-import { fstat, writeFile, writeFileSync } from "fs";
+import { createWriteStream, fstat, writeFile, writeFileSync } from "fs";
 env.config();
+
+const qualities = {
+  "720p": {
+    "itag": 22,
+  },
+  "360p": {
+    "itag": 18,
+  },
+  "1080p60": {
+    video: {
+      "itag": 399,
+    },
+  },
+}
+
+
+
+
 
 import { Telegraf } from "telegraf";
 import { Key, Keyboard } from "telegram-keyboard";
@@ -23,13 +43,32 @@ bot.settings((e) => {
   );
 });
 
+
+
+async function handleDownload({
+  url, quality
+}: {
+  url: string, quality: string
+}) {
+  const info = await ytdl.getBasicInfo(url);
+  const qualityDictionary = parse(info.formats);
+
+  const videoUUID = randomUUID();
+  const audioUUID = randomUUID();
+  
+  const videoStream = createWriteStream(videoUUID);
+  const audioStream = createWriteStream(audioUUID);
+
+  
+}
+
 const YTREGEXP = new RegExp("^(https?://)?((www.)?youtube.com|youtu.be)/.+$");
 bot.hears(YTREGEXP, async (e) => {
   try {
     e.sendChatAction("typing");
 
-    const info = await ytdl.getBasicInfo(e.message.text);
-    const qualityDictionary = parse(info.formats);
+    
+    
     const qulaity = await app
       .firestore()
       .collection("USERS")
@@ -37,13 +76,15 @@ bot.hears(YTREGEXP, async (e) => {
       .where("id", "==", e.from.id)
       .get();
 
+    const quality = qulaity.docs[0].data().quality || "720p"
     //   const list = getItagForStreamsWithAudiosAndVideo(info.formats);
 
+
     e.reply(
-      JSON.stringify(qulaity.docs[0].data())
+      "Wait"
       // "\nThe Download Functionality is disabled\nThis Bot is for show only to see the code please visit:\nhttps://github.com/a4addel/Youtube-Downloader-Telegram-Bot\n"
     );
-  } catch (error) {}
+  } catch (error) { }
 });
 
 const not_YT_LINK = new RegExp(
@@ -60,8 +101,9 @@ bot.on("callback_query", (e) => {
       e.reply(
         "Choose Default Quilty",
         Keyboard.inline([
-          Key.callback("360p", "360"),
-          Key.callback("720p", "720"),
+          Key.callback("360p", "360p"),
+          Key.callback("720p", "720p"),
+          Key.callback("1080p", "1080p60"),
           Key.callback("❌", "❌"),
         ])
       );
