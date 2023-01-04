@@ -1,6 +1,12 @@
 import env from "dotenv";
 env.config();
 
+if(!process.env.BOT_TOKEN ) {
+  console.error("No Bot Token")
+  
+  process.exit(1)
+}
+
 import { Telegraf } from "telegraf";
 import { Key, Keyboard } from "telegram-keyboard";
 
