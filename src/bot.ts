@@ -23,23 +23,23 @@ const YTREGEXP = new RegExp("^(https?://)?((www.)?youtube.com|youtu.be)/.+$");
 bot.hears(YTREGEXP, async (e) => {
   try {
     e.sendChatAction("typing");
- 
+
     //   const info = await ytdl.getBasicInfo(e.message.text);
 
     //   const list = getItagForStreamsWithAudiosAndVideo(info.formats);
 
-    e.reply(`
-The Download Functionality is disabled
-This Bot is for show only to see the code please visit:
-https://github.com/a4addel/Youtube-Downloader-Telegram-Bot\n
-`);
+    e.reply(
+      "\nThe Download Functionality is disabled\nThis Bot is for show only to see the code please visit:\nhttps://github.com/a4addel/Youtube-Downloader-Telegram-Bot\n"
+    );
   } catch (error) {}
 });
 
-const not_YT_LINK = new RegExp("^((?!(http[s]?://)?(?:www.)?youtu.be|youtube.com).)*$");
+const not_YT_LINK = new RegExp(
+  "^((?!(http[s]?://)?(?:www.)?youtu.be|youtube.com).)*$"
+);
 bot.hears(not_YT_LINK, (e) => {
-  e.reply("Please send Youtube link.")
-})
+  e.reply("Please send Youtube link.");
+});
 
 bot.on("callback_query", (e) => {
   // @ts-ignore next-line
