@@ -70,8 +70,11 @@ bot.hears(YTREGEXP, async (e) => {
 
     if (!parsedFormats) return;
 
-    const vid = getBestTrack(parsedFormats.videoTracks, quality);
+    const vid = getBestTrack(parsedFormats.clips, quality) || getBestTrack(parsedFormats.videoTracks, quality);
     if (!vid) return;
+
+    console.log(vid.hasAudio);
+    
 
     const videoUUID = randomUUID();
     const audioUUID = randomUUID();
