@@ -1,4 +1,7 @@
-const theRoadToFfmpeg = path.join(process.cwd(), "ffmpeg-n5.1-latest-win64-gpl-5.1/bin/ffmpeg.exe");
+const theRoadToFfmpeg = path.join(
+  process.cwd(),
+  "ffmpeg-n5.1-latest-win64-gpl-5.1/bin/ffmpeg.exe"
+);
 import { exec } from "child_process";
 import path from "path";
 

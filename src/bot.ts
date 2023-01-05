@@ -1,6 +1,6 @@
 import env from "dotenv";
 env.config();
-import { createWriteStream} from "fs";
+import { createWriteStream } from "fs";
 import commands from "./utils/commands.json";
 import { Key, Keyboard } from "telegram-keyboard";
 import ytdl, { videoFormat } from "ytdl-core";
@@ -40,7 +40,6 @@ function getBestTrack(
   return fallbackFormat;
 }
 
-
 bot.hears(YTREGEXP, async (e) => {
   try {
     e.sendChatAction("typing");
@@ -63,8 +62,10 @@ bot.hears(YTREGEXP, async (e) => {
 
     if (vid.hasAudio) {
       e.reply("Downloading Video");
-      const downloadVid = ytdl(e.message.text, { filter: (format) => format.itag === vid.itag })
-      downloadVid.pipe(videoStream)
+      const downloadVid = ytdl(e.message.text, {
+        filter: (format) => format.itag === vid.itag,
+      });
+      downloadVid.pipe(videoStream);
       downloadVid.on("close", async () => {
         await e.sendChatAction("upload_video");
         e.replyWithVideo({ source: vPath });
@@ -95,7 +96,6 @@ bot.hears(YTREGEXP, async (e) => {
 
     // e.reply("\nThe Download Functionality is disabled\nThis Bot is for show only to see the code please visit:\nhttps://github.com/a4addel/Youtube-Downloader-Telegram-Bot\n");
   } catch (error) {
-  
     e.reply("Something went wrong!");
   }
 });
@@ -112,8 +112,6 @@ const ChangeQualityKeyboard = Keyboard.inline([
   Key.callback("1080p", "1080p60"),
   Key.callback("❌", "❌"),
 ]);
-
-
 
 bot.on("callback_query", async (e) => {
   try {
@@ -160,10 +158,9 @@ bot.start(async (ctx) => {
   const isUserAlreadyRegisterd = await getUser(ctx.from.id.toString() || "");
   if (isUserAlreadyRegisterd.docs[0]) return ctx.reply("Welcome back");
 
-  await addUser(ctx.from.id.toString() || "")
+  await addUser(ctx.from.id.toString() || "");
   await bot.telegram.setMyCommands(commands);
   await ctx.reply("Welcome");
-
 });
 
 bot.launch();
