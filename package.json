@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/mime-types": "^2.1.1",
     "@types/node": "^18.11.18",
     "nodemon": "^2.0.20",
     "prettier": "^2.8.1",
@@ -23,6 +24,7 @@
     "dotenv": "^16.0.3",
     "firebase-admin": "^11.4.1",
     "forever": "^4.0.3",
+    "mime-types": "^2.1.35",
     "notenv": "^2.0.3",
     "telegraf": "^4.11.2",
     "telegram-keyboard": "^2.3.2",
