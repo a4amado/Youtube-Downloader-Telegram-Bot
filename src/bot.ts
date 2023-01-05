@@ -1,25 +1,20 @@
 import env from "dotenv";
 env.config();
-
-import { randomUUID } from "crypto";
-import { createWriteStream, writeFileSync } from "fs";
-import path from "path";
-import { extension } from "mime-types";
-import { Telegraf } from "telegraf";
+import { createWriteStream} from "fs";
+import commands from "./utils/commands.json";
 import { Key, Keyboard } from "telegram-keyboard";
-import ytdl, { downloadFromInfo, videoFormat } from "ytdl-core";
-const theWayTo = path.join(
-  process.cwd(),
-  "ffmpeg-n5.1-latest-win64-gpl-5.1/bin/ffmpeg.exe"
-);
-
-import app from "./firebase/init";
+import ytdl, { videoFormat } from "ytdl-core";
 import { parse } from "./utils/yt-dlp";
-import { exec } from "child_process";
+import randomPATH from "./utils/randomPath";
+import merge from "./utils/merge";
+import clean from "./utils/clean";
+import UpdateQulity from "./utils/updateQuality";
+import getUser from "./utils/getUSer";
+import addUser from "./utils/addUSer";
+import bot from "./utils/createBot";
 
-const bot = new Telegraf(
-  `${process.env.BOT_TOKEN_ID}:${process.env.BOT_TOKEN_SECRET}`
-);
+const YTREGEXP = new RegExp("^(https?://)?((www.)?youtube.com|youtu.be)/.+$");
+const not_command = new RegExp("^(?!/).*");
 
 bot.settings((e) => {
   e.reply(
@@ -32,15 +27,11 @@ bot.settings((e) => {
 });
 
 function getBestTrack(
-  formats: Array<videoFormat>,
+  formats: Array<videoFormat & { i: number }>,
   quality: number
 ): videoFormat {
   let fallbackFormat: videoFormat = formats[0];
-
   loop: for (let index = 0; index < formats.length; index++) {
-    // @ts-ignore
-
-    // @ts-ignore
     if (formats[index]?.i <= quality) {
       fallbackFormat = formats[index];
       break loop;
@@ -49,174 +40,130 @@ function getBestTrack(
   return fallbackFormat;
 }
 
-const YTREGEXP = new RegExp("^(https?://)?((www.)?youtube.com|youtu.be)/.+$");
+
 bot.hears(YTREGEXP, async (e) => {
   try {
     e.sendChatAction("typing");
     e.reply("Working on it!");
-
-    const qulaity = await app
-      .firestore()
-      .collection("USERS")
-      .select("quality")
-      .where("id", "==", e.from.id)
-      .get();
-
+    const qulaity = await getUser(e.from.id.toString() || "");
     const quality = qulaity.docs[0].data()?.quality || 720;
-
     const info = await ytdl.getInfo(e.message.text);
-
     const parsedFormats = parse(info.formats);
-
     if (!parsedFormats) return;
-
-    const vid = getBestTrack(parsedFormats.clips, quality) || getBestTrack(parsedFormats.videoTracks, quality);
+    const vid =
+      getBestTrack(parsedFormats.clips, quality) ||
+      getBestTrack(parsedFormats.videoTracks, quality);
     if (!vid) return;
 
-    console.log(vid.hasAudio);
-    
+    const aPath = randomPATH({ ext: ".ytd" });
+    const vPath = randomPATH({ ext: ".ytd" });
 
-    const videoUUID = randomUUID();
-    const audioUUID = randomUUID();
-
-    const aPath = path.join(
-      process.cwd(),
-      audioUUID + ".ytd"
-    );
-
-    const vPath = path.join(
-      process.cwd(),
-      videoUUID + ".ytd"
-    );
     const videoStream = createWriteStream(vPath);
     const audioStream = createWriteStream(aPath);
 
     if (vid.hasAudio) {
       e.reply("Downloading Video");
-      ytdl(e.message.text, { filter: (format) => format.itag === vid.itag })
-        .pipe(videoStream)
-        .on("close", () => {
-          e.sendChatAction("upload_video");
-          e.replyWithVideo({
-            source: vPath,
-            filename: "s",
-          });
-        });
+      const downloadVid = ytdl(e.message.text, { filter: (format) => format.itag === vid.itag })
+      downloadVid.pipe(videoStream)
+      downloadVid.on("close", async () => {
+        await e.sendChatAction("upload_video");
+        e.replyWithVideo({ source: vPath });
+      });
     } else {
       e.reply("Downloading Video");
-      ytdl(e.message.text, { filter: (format) => format.itag === vid.itag })
-        .pipe(videoStream)
-        .on("close", () => {
-          e.reply("Downloading Audio");
-          ytdl(e.message.text, {
-            filter: (format) => format.itag === parsedFormats.audioTracks.itag,
-          })
-            .pipe(audioStream)
-            .on("close", () => {
-              const mPath = path.join(process.cwd(), randomUUID() + ".ytd");
-              e.reply("Merging");
-              exec(
-                `ffmpeg.exe -i ${aPath} -i ${vPath} -acodec copy -vcodec copy ${mPath}`
-              ).on("close", () => {
-                e.replyWithVideo({
-                  source: mPath,
-                }).then(() => {
-                  exec(`rm -rf ${aPath} ${vPath} ${mPath}`);
-                });
-              });
-            });
+      const vi = ytdl(e.message.text, {
+        filter: (format) => format.itag === vid.itag,
+      });
+      vi.pipe(videoStream);
+      vi.on("close", () => {
+        e.reply("Downloading Audio");
+        const au = ytdl(e.message.text, {
+          filter: (format) => format.itag === parsedFormats.audioTracks.itag,
         });
+
+        au.pipe(audioStream);
+        au.on("close", () => {
+          const mPath = randomPATH({ ext: ".ytd" });
+          e.reply("Merging");
+          merge({ aPath, mPath, vPath }).on("close", async () => {
+            await e.replyWithVideo({ source: mPath });
+            clean([aPath, vPath, mPath]);
+          });
+        });
+      });
     }
 
-    // e.reply(
-    //   "Wait"
-    //   // "\nThe Download Functionality is disabled\nThis Bot is for show only to see the code please visit:\nhttps://github.com/a4addel/Youtube-Downloader-Telegram-Bot\n"
-    // );
+    // e.reply("\nThe Download Functionality is disabled\nThis Bot is for show only to see the code please visit:\nhttps://github.com/a4addel/Youtube-Downloader-Telegram-Bot\n");
   } catch (error) {
-    console.log(error);
-
-    e.reply("error");
+  
+    e.reply("Something went wrong!");
   }
 });
 
-const not_YT_LINK = new RegExp(
-  "^((?!(http[s]?://)?(?:www.)?youtu.be|youtube.com).)*$"
-);
-// bot.hears(not_YT_LINK, (e) => {
-//   e.reply("Please send Youtube link.");
-// });
-
-bot.on("callback_query", (e) => {
-  // @ts-ignore next-line
-  switch (e.update.callback_query.data) {
-    case "change_quality":
-      e.reply(
-        "Choose Default Quilty",
-        Keyboard.inline([
-          Key.callback("360p", "360p"),
-          Key.callback("720p", "720p"),
-          Key.callback("1080p", "1080p60"),
-          Key.callback("❌", "❌"),
-        ])
-      );
-      e.answerCbQuery();
-
-      break;
-    case "❌":
-      e.deleteMessage(e.message);
-      e.answerCbQuery();
-      break;
-    case "720":
-      app
-        .firestore()
-        .collection("USERS")
-        .doc(e.from?.id + "")
-        .update({
-          quality: 720,
-        })
-        .then(() => {
-          e.answerCbQuery("Done");
-        });
-
-      break;
-    case "360":
-      app
-        .firestore()
-        .collection("USERS")
-        .doc(e.from?.id + "")
-        .update({
-          quality: 360,
-        })
-        .then(() => {
-          e.answerCbQuery("Done");
-        });
-      e.answerCbQuery();
-      break;
-    default:
-      break;
-  }
-});
-bot.start(async (e) => {
-  const isUserAlreadyRegisterd = await app
-    .firestore()
-    .collection("USERS")
-    .select("id,quality")
-    .where("id", "==", e.message.from.id)
-    .get();
-
-  if (isUserAlreadyRegisterd.docs[0]) return e.reply("Welcome back");
-  await app.firestore().collection("USERS").add({
-    id: e.message.from.id,
-    joind: new Date(),
-    quality: 720,
+bot.hears([not_command], (e) => {
+  e.reply("❌ Please send Valid YT Link ❌", {
+    reply_to_message_id: e.message.message_id,
   });
-
-  e.reply("Welcome");
-  bot.telegram.setMyCommands([
-    { command: "settings", description: "⚙️ Edit settings" },
-  ]);
 });
 
-bot.launch().then((e) => {
-  console.log("UPP");
+const ChangeQualityKeyboard = Keyboard.inline([
+  Key.callback("360p", "360p"),
+  Key.callback("720p", "720p"),
+  Key.callback("1080p", "1080p60"),
+  Key.callback("❌", "❌"),
+]);
+
+
+
+bot.on("callback_query", async (e) => {
+  try {
+    // @ts-ignore next-line
+    switch (e.update.callback_query.data) {
+      case "change_quality":
+        await e.reply("Choose Default Quilty", ChangeQualityKeyboard);
+        e.answerCbQuery();
+        break;
+      case "❌":
+        await e.deleteMessage(e.message);
+        e.answerCbQuery();
+        break;
+      case "720":
+        await UpdateQulity({
+          quality: 720,
+          user_id: (e.from?.id || "").toString(),
+        });
+        e.answerCbQuery();
+        break;
+      case "360":
+        await UpdateQulity({
+          quality: 360,
+          user_id: (e.from?.id || "").toString(),
+        });
+        e.answerCbQuery();
+        break;
+      case "1080":
+        await UpdateQulity({
+          quality: 1080,
+          user_id: (e.from?.id || "").toString(),
+        });
+        e.answerCbQuery();
+        break;
+      default:
+        break;
+    }
+  } catch (error) {
+    e.answerCbQuery("Something went wrong");
+  }
 });
+
+bot.start(async (ctx) => {
+  const isUserAlreadyRegisterd = await getUser(ctx.from.id.toString() || "");
+  if (isUserAlreadyRegisterd.docs[0]) return ctx.reply("Welcome back");
+
+  await addUser(ctx.from.id.toString() || "")
+  await bot.telegram.setMyCommands(commands);
+  await ctx.reply("Welcome");
+
+});
+
+bot.launch();
