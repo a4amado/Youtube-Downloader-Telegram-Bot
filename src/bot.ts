@@ -133,7 +133,7 @@ bot.hears(YTREGEXP, async (e) => {
       });
     }
 
-    // e.reply("\nThe Download Functionality is disabled\nThis Bot is for show only to see the code please visit:\nhttps://github.com/a4addel/Youtube-Downloader-Telegram-Bot\n");
+    
   } catch (error) {
     console.log(error);
 
@@ -162,7 +162,6 @@ bot.on("callback_query", async (e) => {
         break;
       case "❌":
         await e.deleteMessage(e.message);
-
         break;
 
       default:
