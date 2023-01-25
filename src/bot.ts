@@ -70,16 +70,16 @@ bot.hears(YTREGEXP, async (e) => {
     e.sendChatAction("typing");
     e.reply("Working on it!");
 
-    const Usersqulaity = await getUser(e.from.id.toString() || "");
-    const quality = Usersqulaity?.data()?.quality || 720;
+    const UsersQulaity = await getUser(e.from.id.toString() || "");
+
+    const quality = UsersQulaity ? UsersQulaity?.data()?.quality : 720;
 
     const info = await ytdl.getInfo(e.message.text);
 
     const parsedFormats = parse(info.formats);
     if (!parsedFormats) return;
-    const vid =
-      getBestTrack(parsedFormats.clips, quality) ||
-      getBestTrack(parsedFormats.videoTracks, quality);
+    const vid = getBestTrack(parsedFormats.clips, quality) || getBestTrack(parsedFormats.videoTracks, quality);
+
     if (!vid) return;
 
     const aPath = randomPATH({ ext: ".ytd" });
@@ -88,28 +88,24 @@ bot.hears(YTREGEXP, async (e) => {
     const videoStream = createWriteStream(vPath);
     const audioStream = createWriteStream(aPath);
 
-
     if (vid.hasAudio) {
-
       e.reply("Downloading Video");
-      const downloadVid = ytdl(e.message.text, { filter: (format) => format.itag === vid.itag });
+      const downloadVid = ytdl(e.message.text, {
+        filter: (format) => format.itag === vid.itag,
+      });
       downloadVid.pipe(videoStream);
-      
+
       videoStream.on("close", async () => {
-        console.log("Done");
-        
+
         await e.sendChatAction("upload_video");
         e.replyWithVideo({ source: vPath });
       });
-      
-      videoStream.on("data", () => {
-        
-        
-      })
-      
-      videoStream.on("error",  (err) => {
+
+      videoStream.on("data", () => { });
+
+      videoStream.on("error", (err) => {
         console.log("Error");
-        e.reply(err.message)
+        e.reply(err.message);
       });
     } else {
       e.reply("Downloading Video1");
@@ -117,7 +113,7 @@ bot.hears(YTREGEXP, async (e) => {
         filter: (format) => format.itag === vid.itag,
       });
       vi.pipe(videoStream);
-      
+
       videoStream.on("close", () => {
         e.reply("Downloading Audio");
         const au = ytdl(e.message.text, {
@@ -165,51 +161,48 @@ bot.on("callback_query", async (e) => {
         break;
       case "❌":
         await e.deleteMessage(e.message);
-        
+
         break;
-      
-        
+
       default:
         break;
     }
-      
+
     switch (true) {
       // @ts-ignore next-line
       case qulaities_list.includes(Number(e.update.callback_query.data)):
-      
-      
-      
-        
         // @ts-ignore next-line
-        await UpdateQulity({quality: e.update.callback_query.data, user_id: e.update.callback_query.from.id.toString() });
-        
+        await UpdateQulity({
+          // @ts-ignore next-line
+          quality: e.update.callback_query.data,
+          user_id: e.update.callback_query.from.id.toString(),
+        });
+
         // e.reply("Done", {message_thread_id: e.update.callback_query.message?.message_id})
-        e.answerCbQuery()
+        e.answerCbQuery();
         // e.deleteMessage(e.update.callback_query.message?.message_id)
         break;
-    
+
       default:
         break;
     }
-    
   } catch (error) {
-    
-
-    e.answerCbQuery()
+    e.answerCbQuery();
   }
 });
 
 bot.start(async (ctx) => {
   try {
+    await bot.telegram.setMyCommands(commands);
     const isUserAlreadyRegisterd = await getUser(ctx.from.id.toString() || "");
-  if (isUserAlreadyRegisterd.data()) return ctx.reply("Welcome back");
-
-  await addUser(ctx.from.id.toString() || "");
-  await bot.telegram.setMyCommands(commands);
-  await ctx.reply("Welcome");
-  } catch (error) {
-    console.log(error);
+    if (isUserAlreadyRegisterd) return ctx.reply("Welcome back");
+  
+    await ctx.reply("Welcome");
+    await addUser(ctx.from.id.toString() || "");
     
+    
+  } catch (error) {
+
   }
 });
 
