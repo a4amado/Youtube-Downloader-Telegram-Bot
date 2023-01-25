@@ -14,7 +14,7 @@ Thanks for using our Youtube Downloader Telegram Bot!
 1) Type '/start'.
 2) Paste any YouTube link into the chat box and click 'Go!'
 3) Choose the default quality of your file with command /settings.
-4) avlilable qualities is 1080p, 720p, 480p, 360p, 240p, 144p
+4) avlilable qualities are 4K, 2K, 1080p, 720p, 480p, 360p, 240p and 144p.
 
 
 Ahmad Addel [3dal.dev](https://3adl.dev)
