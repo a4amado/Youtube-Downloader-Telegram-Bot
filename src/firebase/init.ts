@@ -1,6 +1,7 @@
 import admin, { apps } from "firebase-admin";
 
-import * as serviceAccount from "./yt-downloader-bot-f6eb7-firebase-adminsdk-dldgi-ee7993ed5e.json";
+// @ts-ignore
+import * as serviceAccount from "../../yt-downloader-bot-f6eb7-firebase-adminsdk-dldgi-3d0c1918e1.json";
 
 const app =
   apps[0] ||

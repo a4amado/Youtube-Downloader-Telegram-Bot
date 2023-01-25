@@ -6,24 +6,29 @@
   "scripts": {
     "lunch:dev": "nodemon ./src/bot.ts",
     "lunch:start": "tsc && forever start ./dist/bot.js",
-    "format": "prettier --write \"./src/**/**.ts\"",
-    "build": "tsc"
+    "format": "prettier --write \"./src/**/**.ts\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/jest": "^29.4.0",
     "@types/mime-types": "^2.1.1",
     "@types/node": "^18.11.18",
+    "jest": "^29.4.0",
     "nodemon": "^2.0.20",
-    "prettier": "^2.8.1",
+    "prettier": "^2.8.3",
+    "ts-loader": "^9.4.2",
     "ts-node": "^10.9.1",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.4",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
   },
   "dependencies": {
     "dotenv": "^16.0.3",
-    "firebase-admin": "^11.4.1",
+    "firebase-admin": "^11.5.0",
     "forever": "^4.0.3",
+    "lodash": "^4.17.21",
     "mime-types": "^2.1.35",
     "notenv": "^2.0.3",
     "telegraf": "^4.11.2",

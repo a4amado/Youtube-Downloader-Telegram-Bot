@@ -9,9 +9,34 @@ import randomPATH from "./utils/randomPath";
 import merge from "./utils/merge";
 import clean from "./utils/clean";
 import UpdateQulity from "./utils/updateQuality";
-import getUser from "./utils/getUSer";
-import addUser from "./utils/addUSer";
+import getUser from "./utils/getUser";
+import addUser from "./utils/addUser";
 import bot from "./utils/createBot";
+
+const qulaities = [
+  {
+    quality: 360,
+    lable: "360p",
+  },
+  {
+    quality: 720,
+    lable: "720p",
+  },
+  {
+    quality: 1080,
+    lable: "1080p",
+  },
+  {
+    quality: 1440,
+    lable: "2K",
+  },
+  {
+    quality: 2160,
+    lable: "4K",
+  },
+];
+const qulaities_list = qulaities.map((e) => e.quality);
+const defaultQuality = 720;
 
 const YTREGEXP = new RegExp("^(https?://)?((www.)?youtube.com|youtu.be)/.+$");
 const not_command = new RegExp("^(?!/).*");
@@ -44,9 +69,12 @@ bot.hears(YTREGEXP, async (e) => {
   try {
     e.sendChatAction("typing");
     e.reply("Working on it!");
-    const qulaity = await getUser(e.from.id.toString() || "");
-    const quality = qulaity.docs[0].data()?.quality || 720;
+
+    const Usersqulaity = await getUser(e.from.id.toString() || "");
+    const quality = Usersqulaity?.data()?.quality || 720;
+
     const info = await ytdl.getInfo(e.message.text);
+
     const parsedFormats = parse(info.formats);
     if (!parsedFormats) return;
     const vid =
@@ -60,30 +88,44 @@ bot.hears(YTREGEXP, async (e) => {
     const videoStream = createWriteStream(vPath);
     const audioStream = createWriteStream(aPath);
 
+
     if (vid.hasAudio) {
+
       e.reply("Downloading Video");
-      const downloadVid = ytdl(e.message.text, {
-        filter: (format) => format.itag === vid.itag,
-      });
+      const downloadVid = ytdl(e.message.text, { filter: (format) => format.itag === vid.itag });
       downloadVid.pipe(videoStream);
-      downloadVid.on("close", async () => {
+      
+      videoStream.on("close", async () => {
+        console.log("Done");
+        
         await e.sendChatAction("upload_video");
         e.replyWithVideo({ source: vPath });
       });
+      
+      videoStream.on("data", () => {
+        
+        
+      })
+      
+      videoStream.on("error",  (err) => {
+        console.log("Error");
+        e.reply(err.message)
+      });
     } else {
-      e.reply("Downloading Video");
+      e.reply("Downloading Video1");
       const vi = ytdl(e.message.text, {
         filter: (format) => format.itag === vid.itag,
       });
       vi.pipe(videoStream);
-      vi.on("close", () => {
+      
+      videoStream.on("close", () => {
         e.reply("Downloading Audio");
         const au = ytdl(e.message.text, {
           filter: (format) => format.itag === parsedFormats.audioTracks.itag,
         });
 
         au.pipe(audioStream);
-        au.on("close", () => {
+        videoStream.on("close", () => {
           const mPath = randomPATH({ ext: ".ytd" });
           e.reply("Merging");
           merge({ aPath, mPath, vPath }).on("close", async () => {
@@ -96,6 +138,8 @@ bot.hears(YTREGEXP, async (e) => {
 
     // e.reply("\nThe Download Functionality is disabled\nThis Bot is for show only to see the code please visit:\nhttps://github.com/a4addel/Youtube-Downloader-Telegram-Bot\n");
   } catch (error) {
+    console.log(error);
+
     e.reply("Something went wrong!");
   }
 });
@@ -107,9 +151,7 @@ bot.hears([not_command], (e) => {
 });
 
 const ChangeQualityKeyboard = Keyboard.inline([
-  Key.callback("360p", "360p"),
-  Key.callback("720p", "720p"),
-  Key.callback("1080p", "1080p60"),
+  ...qulaities.map((quality) => Key.callback(quality.lable, quality.quality)),
   Key.callback("❌", "❌"),
 ]);
 
@@ -123,44 +165,52 @@ bot.on("callback_query", async (e) => {
         break;
       case "❌":
         await e.deleteMessage(e.message);
-        e.answerCbQuery();
+        
         break;
-      case "720":
-        await UpdateQulity({
-          quality: 720,
-          user_id: (e.from?.id || "").toString(),
-        });
-        e.answerCbQuery();
-        break;
-      case "360":
-        await UpdateQulity({
-          quality: 360,
-          user_id: (e.from?.id || "").toString(),
-        });
-        e.answerCbQuery();
-        break;
-      case "1080":
-        await UpdateQulity({
-          quality: 1080,
-          user_id: (e.from?.id || "").toString(),
-        });
-        e.answerCbQuery();
-        break;
+      
+        
       default:
         break;
     }
+      
+    switch (true) {
+      // @ts-ignore next-line
+      case qulaities_list.includes(Number(e.update.callback_query.data)):
+      
+      
+      
+        
+        // @ts-ignore next-line
+        await UpdateQulity({quality: e.update.callback_query.data, user_id: e.update.callback_query.from.id.toString() });
+        
+        // e.reply("Done", {message_thread_id: e.update.callback_query.message?.message_id})
+        e.answerCbQuery()
+        // e.deleteMessage(e.update.callback_query.message?.message_id)
+        break;
+    
+      default:
+        break;
+    }
+    
   } catch (error) {
-    e.answerCbQuery("Something went wrong");
+    
+
+    e.answerCbQuery()
   }
 });
 
 bot.start(async (ctx) => {
-  const isUserAlreadyRegisterd = await getUser(ctx.from.id.toString() || "");
-  if (isUserAlreadyRegisterd.docs[0]) return ctx.reply("Welcome back");
+  try {
+    const isUserAlreadyRegisterd = await getUser(ctx.from.id.toString() || "");
+  if (isUserAlreadyRegisterd.data()) return ctx.reply("Welcome back");
 
   await addUser(ctx.from.id.toString() || "");
   await bot.telegram.setMyCommands(commands);
   await ctx.reply("Welcome");
+  } catch (error) {
+    console.log(error);
+    
+  }
 });
 
 bot.launch();
