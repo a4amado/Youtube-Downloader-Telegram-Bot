@@ -17,4 +17,4 @@ Thanks for using our Youtube Downloader Telegram Bot!
 4) avlilable qualities is 1080p, 720p, 480p, 360p, 240p, 144p
 
 
-Ahmad Addel [3dal.dev](3adl.dev)
+Ahmad Addel [3dal.dev](https://3adl.dev)
