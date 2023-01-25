@@ -36,7 +36,6 @@ const qulaities = [
   },
 ];
 const qulaities_list = qulaities.map((e) => e.quality);
-const defaultQuality = 720;
 
 const YTREGEXP = new RegExp("^(https?://)?((www.)?youtube.com|youtu.be)/.+$");
 const not_command = new RegExp("^(?!/).*");
@@ -77,12 +76,10 @@ bot.hears(YTREGEXP, async (e) => {
     const info = await ytdl.getInfo(e.message.text);
 
     const parsedFormats = parse(info.formats);
-    
 
     const vid =
       getBestTrack(parsedFormats.clips, quality) ||
       getBestTrack(parsedFormats.videoTracks, quality);
-
 
     const aPath = randomPATH({ ext: ".ytd" });
     const vPath = randomPATH({ ext: ".ytd" });
@@ -105,7 +102,6 @@ bot.hears(YTREGEXP, async (e) => {
       videoStream.on("data", () => {});
 
       videoStream.on("error", (err) => {
-        
         e.reply(err.message);
       });
     } else {
@@ -132,8 +128,6 @@ bot.hears(YTREGEXP, async (e) => {
         });
       });
     }
-
-    
   } catch (error) {
     console.log(error);
 
@@ -178,10 +172,14 @@ bot.on("callback_query", async (e) => {
           user_id: e.update.callback_query.from.id.toString(),
         });
 
-        // @ts-ignore
-        e.reply(`The Default Qulaity has ben changed to **${e.update.callback_query.data}**`, {parse_mode: "MarkdownV2"})
-        e.answerCbQuery()
         
+        e.reply(
+          // @ts-ignore
+          `The Default Qulaity has ben changed to **${e.update.callback_query.data}**`,
+          { parse_mode: "MarkdownV2" }
+        );
+        e.answerCbQuery();
+
         break;
 
       default:
