@@ -4,7 +4,7 @@ export default function UpdateQulity({
   quality,
   user_id,
 }: {
-  quality: 360 | 720 | 1080 | 1440 | 2160;
+  quality: 360 | 720 | 1080 | 1440 | 2160 ;
   user_id: string;
 }) {
   
@@ -14,7 +14,7 @@ export default function UpdateQulity({
     .collection("USERS")
 
     .doc(user_id)
-    .update({ quality:  quality })
+    .update({ quality:  Number(quality) })
     .then((e) => res("s"))
     .catch((e) => rej("d"))
     
