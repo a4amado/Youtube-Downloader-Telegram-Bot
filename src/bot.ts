@@ -51,12 +51,15 @@ bot.settings((e) => {
 });
 
 function getBestTrack(
-  formats: Array<videoFormat & { i: number }>,
+  formats: Array<videoFormat>,
   quality: number
 ): videoFormat {
+  console.log(formats);
+  
   let fallbackFormat: videoFormat = formats[0];
   loop: for (let index = 0; index < formats.length; index++) {
-    if (formats[index]?.i <= quality) {
+    // @ts-ignore
+    if (formats[index]?.height <= quality) {
       fallbackFormat = formats[index];
       break loop;
     }
@@ -78,8 +81,8 @@ bot.hears(YTREGEXP, async (e) => {
     const parsedFormats = parse(info.formats);
 
     const vid =
-      getBestTrack(parsedFormats.clips, quality) ||
-      getBestTrack(parsedFormats.videoTracks, quality);
+    getBestTrack(parsedFormats.videoTracks, quality) || getBestTrack(parsedFormats.clips, quality)
+      
 
     const aPath = randomPATH({ ext: ".ytd" });
     const vPath = randomPATH({ ext: ".ytd" });
@@ -99,7 +102,10 @@ bot.hears(YTREGEXP, async (e) => {
         e.replyWithVideo({ source: vPath });
       });
 
-      videoStream.on("data", () => {});
+      videoStream.on("data", () => {
+        console.log("ss");
+        
+      });
 
       videoStream.on("error", (err) => {
         e.reply(err.message);
