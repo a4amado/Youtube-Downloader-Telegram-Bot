@@ -77,10 +77,12 @@ bot.hears(YTREGEXP, async (e) => {
     const info = await ytdl.getInfo(e.message.text);
 
     const parsedFormats = parse(info.formats);
-    if (!parsedFormats) return;
-    const vid = getBestTrack(parsedFormats.clips, quality) || getBestTrack(parsedFormats.videoTracks, quality);
+    
 
-    if (!vid) return;
+    const vid =
+      getBestTrack(parsedFormats.clips, quality) ||
+      getBestTrack(parsedFormats.videoTracks, quality);
+
 
     const aPath = randomPATH({ ext: ".ytd" });
     const vPath = randomPATH({ ext: ".ytd" });
@@ -96,15 +98,14 @@ bot.hears(YTREGEXP, async (e) => {
       downloadVid.pipe(videoStream);
 
       videoStream.on("close", async () => {
-
         await e.sendChatAction("upload_video");
         e.replyWithVideo({ source: vPath });
       });
 
-      videoStream.on("data", () => { });
+      videoStream.on("data", () => {});
 
       videoStream.on("error", (err) => {
-        console.log("Error");
+        
         e.reply(err.message);
       });
     } else {
@@ -178,9 +179,10 @@ bot.on("callback_query", async (e) => {
           user_id: e.update.callback_query.from.id.toString(),
         });
 
-        // e.reply("Done", {message_thread_id: e.update.callback_query.message?.message_id})
-        e.answerCbQuery();
-        // e.deleteMessage(e.update.callback_query.message?.message_id)
+        // @ts-ignore
+        e.reply(`The Default Qulaity has ben changed to **${e.update.callback_query.data}**`, {parse_mode: "MarkdownV2"})
+        e.answerCbQuery()
+        
         break;
 
       default:
@@ -196,14 +198,10 @@ bot.start(async (ctx) => {
     await bot.telegram.setMyCommands(commands);
     const isUserAlreadyRegisterd = await getUser(ctx.from.id.toString() || "");
     if (isUserAlreadyRegisterd) return ctx.reply("Welcome back");
-  
+
     await ctx.reply("Welcome");
     await addUser(ctx.from.id.toString() || "");
-    
-    
-  } catch (error) {
-
-  }
+  } catch (error) {}
 });
 
 bot.launch();
