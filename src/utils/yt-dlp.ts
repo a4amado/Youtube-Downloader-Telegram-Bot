@@ -1,18 +1,4 @@
-import ytdl, { videoFormat } from "ytdl-core";
-
-
-const labelToNumber = (label: string) => {
-  let num = "";
-  for (let index = 0; index < label.length; index++) {
-    if (Number.isInteger(label[index])) {
-      num = num + label[index];
-    } else {
-      break;
-    }
-  }
-  return Number(num);
-}
-  
+import ytdl, { videoFormat } from "ytdl-core";  
 
 const SortByHeight = (formats: Array<videoFormat>) =>
   // @ts-ignore
